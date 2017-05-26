@@ -61,7 +61,7 @@ class FlushSynchronizer<K> {
     lock.lock();
     try {
       long nanosLeft = timeoutNanos;
-      while (!isReady()) {
+      while (keyToReady.isEmpty()) {
         if (nanosLeft <= 0) break;
         nanosLeft = available.awaitNanos(nanosLeft);
       }

@@ -65,7 +65,7 @@ abstract class AbstractQueueRecycler implements QueueRecycler {
       if (queue == null) {
         queue = new SizeBoundedQueue(pendingMaxMessages, overflowStrategy, key);
         keyToQueue.put(key, queue);
-        recycle(queue);
+        recycler().offer(queue);
         onCreate(queue);
       }
       keyToLastGet.put(key, now());
@@ -99,13 +99,14 @@ abstract class AbstractQueueRecycler implements QueueRecycler {
     if (queue != null) {
       lock.lock();
       try {
-        // offer only when not dead
-        if (keyToQueue.containsKey(queue.key) || queue.count > 0) {
-          recycler().offer(queue);
+        if (!keyToQueue.containsKey(queue.key) &&
+            queue.count == 0) { // offer only when not dead
+          return;
         }
       } finally {
         lock.unlock();
       }
+      recycler().offer(queue);
     }
   }
 
